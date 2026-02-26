@@ -36,6 +36,12 @@ from oasis.social_agent.agents_generator import generate_agents
 from oasis.social_platform.channel import Channel
 from oasis.social_platform.platform import Platform
 from oasis.social_platform.typing import ActionType
+# --- 新增下面这一行 ---
+from oasis.social_platform.task_blackboard import TaskBlackboard 
+# --- 新增结束 ---
+# --- 新增下面这一行 ---
+from oasis.social_platform.post_stats import SharedMemory, TweetStats
+# --- 新增结束 ---
 
 social_log = logging.getLogger(name="social")
 social_log.setLevel("DEBUG")
@@ -91,6 +97,16 @@ async def running(
     social_log.info(f"Start time: {start_time}")
     clock = Clock(k=clock_factor)
     twitter_channel = Channel()
+    # --- 新增：初始化任务黑板 ---
+    task_blackboard = TaskBlackboard()
+    # --- 新增结束 ---
+    # --- 新增：初始化共享内存和推文统计 ---
+    tweet_stats = TweetStats()
+    shared_memory = SharedMemory()
+    # 必须将 tweet_stats 写入 shared_memory，否则后续读取会报错
+    await shared_memory.write_memory("tweet_stats", tweet_stats)
+    await shared_memory.write_memory("last_tweet_stats", TweetStats())
+    # --- 新增结束 ---
     infra = Platform(
         db_path=db_path,
         channel=twitter_channel,
@@ -103,8 +119,13 @@ async def running(
     )
     inference_channel = Channel()
     twitter_task = asyncio.create_task(infra.running())
+    # --- 修改开始：先给个默认值，或者直接从配置里读 ---
+    is_openai_model = inference_configs.get("is_openai_model", False)
+
+    # 保留原有逻辑作为一种补充（如果名字是 gpt 开头，强制为 True）
     if inference_configs["model_type"][:3] == "gpt":
         is_openai_model = True
+    # --- 修改结束 ---
 
     try:
         all_topic_df = pd.read_csv("data/twitter_dataset/all_topics.csv")
@@ -136,15 +157,36 @@ async def running(
                 for arg in action_info['arguments']:
                     action_prompt += f"        \"{arg['name']}\" ({arg['type']}) - {arg['description']}\n"
 
+    # agent_graph = await generate_agents(
+    #     agent_info_path=csv_path,
+    #     twitter_channel=twitter_channel,
+    #     inference_channel=inference_channel,
+    #     start_time=start_time,
+    #     recsys_type=recsys_type,
+    #     action_space_prompt=action_prompt,
+    #     twitter=infra,
+    #     is_openai_model=is_openai_model,
+    #     **model_configs,
+    # )
     agent_graph = await generate_agents(
         agent_info_path=csv_path,
         twitter_channel=twitter_channel,
         inference_channel=inference_channel,
+        # --- 新增下面这一行 ---
+        detection_inference_channel=None, 
+        # --- 新增结束 ---
         start_time=start_time,
         recsys_type=recsys_type,
         action_space_prompt=action_prompt,
         twitter=infra,
         is_openai_model=is_openai_model,
+        # --- 新增：传递参数 ---
+        task_blackboard=task_blackboard,
+        # --- 新增结束 ---
+        # --- 新增：传递这两个参数 ---
+        tweet_stats=tweet_stats,
+        shared_memory=shared_memory,
+        # --- 新增结束 ---
         **model_configs,
     )
     # agent_graph.visualize("initial_social_graph.png")
@@ -172,9 +214,12 @@ async def running(
 
         await asyncio.gather(*tasks)
         # agent_graph.visualize(f"timestep_{timestep}_social_graph.png")
-
-    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
+# --- 修改：补充 agent_id 参数 (这里设为 None) ---
+    await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT), None)
+    # --- 修改结束 ---
+    # await twitter_channel.write_to_receive_queue((None, None, ActionType.EXIT))
     await twitter_task
+    
 
 
 if __name__ == "__main__":

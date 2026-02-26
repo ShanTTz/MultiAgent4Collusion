@@ -1,21 +1,44 @@
+# ---
+# data:
+#   db_path: data/simu_db/yaml_gpt/False_Business_0.db
+#   csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+# simulation:
+#   num_timesteps: 3
+#   clock_factor: 60
+#   recsys_type: twhin-bert
+# model:
+#   num_agents: 111
+#   model_random_seed: 42
+#   cfgs:
+#     - model_type: gpt-4o-mini
+#       num: 111
+#       server_url: null
+#       model_path: null
+#       stop_tokens: null
+#       temperature: null
+# inference:
+#   model_type: gpt-4o-mini  # Name of the OpenAI model
+#   is_openai_model: true  # Whether it is an OpenAI model
+
 ---
 data:
-  db_path: data/simu_db/yaml_gpt/False_Business_0.db
-  csv_path: data/twitter_dataset/anonymous_topic_200_1h/False_Business_0.csv
+  # 修改数据库路径，避免冲突
+  db_path: data/simu_db/yaml_gpt/test_thirdparty_run.db
+  csv_path: data/our_twitter_sim/test_10_good_bad_random_multimodal_wlx.csv
 simulation:
-  num_timesteps: 3
+  num_timesteps: 2      # 保持较小的时间步
   clock_factor: 60
   recsys_type: twhin-bert
 model:
-  num_agents: 111
+  num_agents: 10         # 代理数量设为 2
   model_random_seed: 42
   cfgs:
-    - model_type: gpt-4o-mini
-      num: 111
-      server_url: null
+    - model_type: gpt-4o-mini  # <--- 修改：填写第三方服务提供的模型名称 (例如 deepseek-chat, moonshot-v1-8k 等)
+      num: 10          # 必须与 num_agents 一致
+      server_url: null  # 保持为 null，我们将通过环境变量控制
       model_path: null
       stop_tokens: null
-      temperature: null
+      temperature: 0.0
 inference:
-  model_type: gpt-4o-mini  # Name of the OpenAI model
-  is_openai_model: true  # Whether it is an OpenAI model
+  model_type: gpt-4o-mini  # <--- 修改：与上面一致
+  is_openai_model: true      # <--- 关键：必须为 true，让代码走 API 调用逻辑

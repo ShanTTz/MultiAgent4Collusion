@@ -87,6 +87,11 @@ async def generate_agents(
     random.shuffle(model_types)
     assert len(model_types) == num_agents
     agent_info = pd.read_csv(agent_info_path)
+    # --- 新增代码：数据切片 ---
+    if len(agent_info) > num_agents:
+        print(f"Slicing agent info from {len(agent_info)} to {num_agents} for small run.")
+        agent_info = agent_info.iloc[:num_agents]
+    # --- 新增结束 ---
     # agent_info = agent_info[:10000]
     assert len(model_types) == len(agent_info), (
         f"Mismatch between the number of agents "
@@ -184,10 +189,12 @@ async def generate_agents(
         if not isinstance(following_id_list, int):
             if len(following_id_list) != 0:
                 for follow_id in following_id_list:
-                    follow_list.append((agent_id, follow_id, start_time))
-                    user_update1.append((agent_id, ))
-                    user_update2.append((follow_id, ))
-                    agent_graph.add_edge(agent_id, follow_id)
+# --- 新增判断：过滤掉不存在的关注对象 ---
+                    if follow_id < num_agents:
+                        follow_list.append((agent_id, follow_id, start_time))
+                        user_update1.append((agent_id, ))
+                        user_update2.append((follow_id, ))
+                        agent_graph.add_edge(agent_id, follow_id)
 
         previous_posts = ast.literal_eval(
             agent_info["previous_tweets"][agent_id])
