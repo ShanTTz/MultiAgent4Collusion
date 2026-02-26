@@ -754,22 +754,77 @@ class SocialAgent:
             f"Agent {self.agent_id} is running with prompt: {openai_messages}"
         )
 
+        # if self.is_openai_model:
+        #     try:
+        #         response = self.model_backend.run(openai_messages)
+        #         agent_log.info(f"Agent {self.agent_id} response: {response}")
+        #         content = response
+        #         for tool_call in response.choices[0].message.tool_calls:
+        #             action_name = tool_call.function.name
+        #             args = json.loads(tool_call.function.arguments)
+        #             agent_log.info(
+        #                 f"Agent {self.agent_id} is performing "
+        #                 f"action: {action_name} with args: {args}"
+        #             )
+        #             await getattr(self.env.action, action_name)(**args)
+        #             self.perform_agent_graph_action(action_name, args)
+        #     except Exception as e:
+        #         agent_log.error(e)
+        #         content = "No response."
         if self.is_openai_model:
             try:
                 response = self.model_backend.run(openai_messages)
                 agent_log.info(f"Agent {self.agent_id} response: {response}")
-                content = response
-                for tool_call in response.choices[0].message.tool_calls:
-                    action_name = tool_call.function.name
-                    args = json.loads(tool_call.function.arguments)
-                    agent_log.info(
-                        f"Agent {self.agent_id} is performing "
-                        f"action: {action_name} with args: {args}"
-                    )
-                    await getattr(self.env.action, action_name)(**args)
-                    self.perform_agent_graph_action(action_name, args)
+                content = str(response)
+                
+                tool_calls = response.choices[0].message.tool_calls
+                
+                # 1. 优先尝试解析官方的 tool_calls
+                if tool_calls:
+                    for tool_call in tool_calls:
+                        action_name = tool_call.function.name
+                        args = json.loads(tool_call.function.arguments)
+                        agent_log.info(
+                            f"Agent {self.agent_id} is performing "
+                            f"action: {action_name} with args: {args}"
+                        )
+                        await getattr(self.env.action, action_name)(**args)
+                        self.perform_agent_graph_action(action_name, args)
+                        
+                # 2. 如果没有 tool_calls，说明大模型把结果输出到了普通文本 (content) 中，启用正则解析 JSON
+                else:
+                    msg_content = response.choices[0].message.content
+                    if msg_content:
+                        pattern = re.compile(r"(?s).*?(?P<json_block>\{.*\})")
+                        match = pattern.search(msg_content)
+                        if match:
+                            json_content = match.group("json_block")
+                            content_json = json.loads(json_content)
+                            functions = content_json.get("functions", [])
+                            for function in functions:
+                                action_name = function.get("name", "")
+                                
+                                # 模型有时会错误地带上前缀 "functions."，我们需要清洗一下
+                                if action_name.startswith("functions."):
+                                    action_name = action_name.split(".")[-1]
+                                    
+                                args = function.get("arguments", {})
+                                if action_name == "do_nothing":
+                                    args = {}
+                                    
+                                agent_log.info(
+                                    f"Agent {self.agent_id} is performing "
+                                    f"action: {action_name} with args: {args} (Parsed from JSON Text)"
+                                )
+                                
+                                if action_name == "create_plan":
+                                    self.create_plan(plan=args.get("plan"))
+                                else:
+                                    await getattr(self.env.action, action_name)(**args)
+                                    self.perform_agent_graph_action(action_name, args)
+                                    
             except Exception as e:
-                agent_log.error(e)
+                agent_log.error(f"Error executing API response: {e}")
                 content = "No response."
 
         else:
