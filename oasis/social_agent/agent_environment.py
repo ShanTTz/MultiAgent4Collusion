@@ -45,13 +45,16 @@ class SocialEnvironment(Environment):
     def __init__(self, action: SocialAction):
         self.action = action
 
+
     async def get_posts_env(self) -> str:
         posts = await self.action.refresh()
-        # TODO: Replace posts json format string to other formats
-        if posts["success"]:
+        if posts.get("success"):
             posts_env = json.dumps(posts["posts"], indent=4)
             posts_env = self.posts_env_template.substitute(posts=posts_env)
         else:
+            # 增加错误信息打印
+            if "error" in posts:
+                print(f"[Error in refresh]: {posts['error']}")
             posts_env = "After refreshing, there are no existing posts."
         return posts_env
 
@@ -62,7 +65,7 @@ class SocialEnvironment(Environment):
     async def get_follows_env(self) -> str:
         # TODO: Implement follows env
         return self.follows_env_template.substitute(num_follows=0)
-
+    
     async def to_text_prompt(
         self,
         include_posts: bool = True,

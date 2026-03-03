@@ -316,13 +316,27 @@ class Platform:
                 twitter_log.info(f"following_posts_ids: {following_posts_ids}")
 
                 selected_post_ids = following_posts_ids + selected_post_ids
+                # selected_post_ids = list(set(selected_post_ids))
                 selected_post_ids = list(set(selected_post_ids))
-                await self.tweet_stats.update_agent_visible_post_dict(
-                    user_id=user_id, post_ids=selected_post_ids
-                )
-                await self.tweet_stats.add_viewers(
-                    user_id=user_id, post_ids=selected_post_ids
-                )
+                
+                # 【新增】拦截空列表，防止下方 SQL 拼接出错
+                if not selected_post_ids:
+                    return {"success": True, "posts": []}
+                
+                # 【修改】增加 if self.tweet_stats: 的判断
+                if self.tweet_stats:
+                    await self.tweet_stats.update_agent_visible_post_dict(
+                        user_id=user_id, post_ids=selected_post_ids
+                    )
+                    await self.tweet_stats.add_viewers(
+                        user_id=user_id, post_ids=selected_post_ids
+                    )
+                # await self.tweet_stats.update_agent_visible_post_dict(
+                #     user_id=user_id, post_ids=selected_post_ids
+                # )
+                # await self.tweet_stats.add_viewers(
+                #     user_id=user_id, post_ids=selected_post_ids
+                # )
 
             placeholders = ", ".join("?" for _ in selected_post_ids)
 
@@ -427,10 +441,10 @@ class Platform:
                 (content, post_id),
                 commit=True,
             )
-
-            await self.tweet_stats.modify_post(
-                post_id=post_id, content=content
-            )
+            if self.tweet_stats is not None:
+                await self.tweet_stats.modify_post(
+                    post_id=post_id, content=content
+                )
             twitter_log.info(f"Modify post {post_id}: {content}")
             return {"success": True, "post_id": post_id}
 
@@ -470,10 +484,10 @@ class Platform:
                 f"action={ActionType.CREATE_POST.value}, "
                 f"info={action_info}"
             )
-
-            await self.tweet_stats.create_post(
-                post_id=post_id, user_id=user_id, content=content
-            )
+            if self.tweet_stats is not None:
+                await self.tweet_stats.create_post(
+                    post_id=post_id, user_id=user_id, content=content
+                )
             twitter_log.info(f"Post {post_id}: {content}")
             return {"success": True, "post_id": post_id}
 
@@ -794,7 +808,8 @@ class Platform:
             self.pl_utils._record_trace(
                 user_id, ActionType.DISLIKE_POST.value, action_info, current_time
             )
-            await self.tweet_stats.add_dislike(user_id=user_id, post_id=post_id)
+            if self.tweet_stats is not None:
+                await self.tweet_stats.add_dislike(user_id=user_id, post_id=post_id)
             return {"success": True, "dislike_id": dislike_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1197,10 +1212,10 @@ class Platform:
             self.pl_utils._record_trace(
                 user_id, ActionType.CREATE_COMMENT.value, action_info, current_time
             )
-
-            await self.tweet_stats.add_comment(
-                user_id=user_id, post_id=post_id, comment=content, agree=agree
-            )
+            if self.tweet_stats is not None:
+                await self.tweet_stats.add_comment(
+                    user_id=user_id, post_id=post_id, comment=content, agree=agree
+                )
             return {"success": True, "comment_id": comment_id}
         except Exception as e:
             return {"success": False, "error": str(e)}
