@@ -1227,7 +1227,6 @@ class Platform:
             )
             
             if self.tweet_stats is not None:
-                # 保持原样，无需修改 tweet_stats.py 的底层方法
                 await self.tweet_stats.add_comment(
                     user_id=user_id, post_id=post_id, comment=content, agree=agree
                 )

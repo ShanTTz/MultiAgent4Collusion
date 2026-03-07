@@ -163,7 +163,10 @@ class SocialAgent:
             for comment in comments:
                 post_id = comment['post_id']
                 comment_text = comment['comment']
-                trajectory += f"Comment on post {post_id}: {comment_text}\n"
+                emo = comment.get('emotion', 'neutral')
+                # 让 Agent 的历史轨迹也体现出它的情绪
+                trajectory += f"Comment on post {post_id} with emotion [{emo}]: {comment_text}\n"
+
                 
         self.past_posts = []
         self.past_comments = []
@@ -324,8 +327,9 @@ class SocialAgent:
                         f"You reposted post {post_id}"
                     )
                 elif action_name == "create_comment":
+                    emotion = arguments.get("emotion", "neutral")
                     await self.long_term_memory.write_memory(
-                        f"You commented on post {post_id} with content: {content}"
+                        f"You commented on post {post_id} with emotion '{emotion}', content: {content}"
                     )
                 elif action_name == "flag_fake_news":
                     # TODO by rqb
@@ -909,10 +913,12 @@ class SocialAgent:
                             **function["arguments"]
                         )
                     elif function["name"] == "create_comment":
-                        self.past_comments.append({"post_id": function['arguments']['post_id'], "comment": function['arguments']['content']})
-                        await getattr(self.env.action, function["name"])(
-                            **function["arguments"]
-                        )
+                        args = function['arguments']
+                        self.past_comments.append({
+                            "post_id": args['post_id'], 
+                            "comment": args['content'],
+                            "emotion": args.get('emotion', 'neutral')  # 增加 emotion
+                        })
                     else:
                         # For other actions, proceed as usual
                         await getattr(self.env.action, function["name"])(

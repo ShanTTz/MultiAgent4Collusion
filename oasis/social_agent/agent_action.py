@@ -12,7 +12,7 @@
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from typing import Any
-
+from typing import Literal
 from camel.toolkits import OpenAIFunction
 
 from oasis.social_platform.channel import Channel
@@ -499,7 +499,7 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.TREND.value)
 
-    async def create_comment(self, post_id: int, content: str, agree: bool, emotion: str = "neutral"):
+    async def create_comment(self, post_id: int, content: str, agree: bool, emotion: Literal["panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"] = "neutral"):
         r"""Create a new comment for a specified post given content.
 
         This method creates a new comment based on the provided content and

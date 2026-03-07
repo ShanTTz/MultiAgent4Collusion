@@ -369,7 +369,7 @@ if __name__ == "__main__":
         save_dir="data/our_twitter_sim",
         root_dir=".",
         profile_dir="user_profiles.json",
-        num_good=90,
+        num_good=20,
         num_bad=10,
         good_type="good",
         bad_type="bad",
