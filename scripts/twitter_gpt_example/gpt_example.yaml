@@ -56,18 +56,38 @@ actions:
       - name: "content"
         type: "string"
         description: "The text content of the post."
+  
+  quote_post:
+    description: "Quote a specified post and add your own thoughts to it."
+    arguments:
+      - name: "post_id"
+        type: "integer"
+        description: "The ID of the post to be quoted."
+      - name: "quote_content"
+        type: "string"
+        description: "Your own thoughts added to the quote."
+  
   like_post:
     description: "Like a specific post."
     arguments:
       - name: "post_id"
         type: "integer"
         description: "The ID of the post to like."
+
+  dislike_post:
+    description: "Dislikes a specified post."
+    arguments:
+      - name: "post_id"
+        type: "integer"
+        description: "The ID of the post to be disliked."
+  
   repost:
     description: "Repost someone else's post."
     arguments:
       - name: "post_id"
         type: "integer"
         description: "The ID of the post to repost."
+  
   create_comment:
     description: "Comment on a specific post."
     arguments:
@@ -81,3 +101,32 @@ actions:
       - name: "agree"
         type: "boolean"
         description: "Whether you agree with this post or not based on content. True for agree, False for disagree."
+        actions:
+  
+  like_comment:
+    description: "Like a specified comment."
+    arguments:
+      - name: "comment_id"
+        type: "integer"
+        description: "The ID of the comment to be liked."
+  
+  dislike_comment:
+    description: "Dislike a specified comment."
+    arguments:
+      - name: "comment_id"
+        type: "integer"
+        description: "The ID of the comment to be disliked."
+  
+  follow:
+    description: "Follow a user."
+    arguments:
+      - name: "followee_id"
+        type: "integer"
+        description: "The ID of the user to be followed."
+
+  mute:
+    description: "Mute a user."
+    arguments:
+      - name: "mutee_id"
+        type: "integer"
+        description: "The ID of the user to mute."

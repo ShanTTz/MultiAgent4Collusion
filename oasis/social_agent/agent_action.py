@@ -207,7 +207,7 @@ class SocialAction:
             result in a failure.
         """
         quote_message = (post_id, quote_content)
-        return await self.perform_action(quote_message, ActionType.QUOTE_POST)
+        return await self.perform_action(quote_message, ActionType.QUOTE_POST.value)
 
     async def like_post(self, post_id: int):
         r"""Create a new like for a specified post.
