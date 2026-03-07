@@ -101,7 +101,18 @@ actions:
       - name: "agree"
         type: "boolean"
         description: "Whether you agree with this post or not based on content. True for agree, False for disagree."
-        actions:
+      - name: "emotion"
+        type: "string"
+        description:
+            " The underlying emotion driving your comment. You MUST choose exactly one from the following list:
+            ['panic', 'fanaticism', 'confusion', 'skepticism', 'anger', 'sarcasm', 'neutral']
+            * Guidelines for emotion selection:
+            - 'panic' / 'fanaticism': Use when deceived, anxious, or blindly following.
+            - 'confusion': Use when unsure about the truthfulness.
+            - 'skepticism': Use when you doubt the post's credibility (typical after factual prebunking).
+            - 'anger': Use when you recognize fake news and feel indignant.
+            - 'sarcasm': Use to mock or debunk the fake news humorously.
+            - 'neutral': Regular objective statements."
   
   like_comment:
     description: "Like a specified comment."

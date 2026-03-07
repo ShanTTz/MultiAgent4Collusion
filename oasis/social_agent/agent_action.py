@@ -499,7 +499,7 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.TREND.value)
 
-    async def create_comment(self, post_id: int, content: str, agree: bool):
+    async def create_comment(self, post_id: int, content: str, agree: bool, emotion: str = "neutral"):
         r"""Create a new comment for a specified post given content.
 
         This method creates a new comment based on the provided content and
@@ -512,6 +512,7 @@ class SocialAction:
                 added.
             content (str): The content of the comment to be created.
             agree (bool): Whether the agent agree with this post or not based on content.
+            emotion (str): The underlying emotion driving the comment. # 新增参数说明
 
         Returns:
             dict: A dictionary with two key-value pairs. The 'success' key
@@ -522,10 +523,10 @@ class SocialAction:
             Example of a successful return:
                 {'success': True, 'comment_id': 123}
         """
-        comment_message = (post_id, content, agree)
-        return await self.perform_action(comment_message,
-                                         ActionType.CREATE_COMMENT.value)
-
+        # 注意这里：把 emotion 打包进 message 元组中
+        comment_message = (post_id, content, agree, emotion)
+        return await self.perform_action(comment_message, ActionType.CREATE_COMMENT.value)
+    
     async def like_comment(self, comment_id: int):
         r"""Create a new like for a specified comment.
 

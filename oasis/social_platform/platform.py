@@ -1180,7 +1180,13 @@ class Platform:
             return {"success": False, "error": str(e)}
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
-        post_id, content, agree = comment_message
+        # 1. 兼容性解包：如果上层传了4个参数，则接收 emotion；否则赋予默认值 neutral
+        if len(comment_message) == 4:
+            post_id, content, agree, emotion = comment_message
+        else:
+            post_id, content, agree = comment_message
+            emotion = "neutral"
+
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
                 datetime.now(), self.start_time
@@ -1195,24 +1201,33 @@ class Platform:
                 post_id = post_type_result["root_post_id"]
             user_id = agent_id
 
-            # Insert the comment record
+            # 2. 修改 SQL 语句：增加 emotion 字段（注意 VALUES 里也多加了一个 '?')
             comment_insert_query = (
-                "INSERT INTO comment (post_id, user_id, content, agree, created_at) "
-                "VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO comment (post_id, user_id, content, agree, emotion, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)"
             )
+            
+            # 3. 传参时加入 emotion
             self.pl_utils._execute_db_command(
                 comment_insert_query,
-                (post_id, user_id, content, agree, current_time),
+                (post_id, user_id, content, agree, emotion, current_time),
                 commit=True,
             )
             comment_id = self.db_cursor.lastrowid
 
-            # Prepare information for the trace record
-            action_info = {"content": content, "agree": agree, "comment_id": comment_id}
+            # 4. 修改 Trace 信息：在用户行为轨迹日志中也加上 emotion 字段
+            action_info = {
+                "content": content, 
+                "agree": agree, 
+                "emotion": emotion,  # 新增这一行
+                "comment_id": comment_id
+            }
             self.pl_utils._record_trace(
                 user_id, ActionType.CREATE_COMMENT.value, action_info, current_time
             )
+            
             if self.tweet_stats is not None:
+                # 保持原样，无需修改 tweet_stats.py 的底层方法
                 await self.tweet_stats.add_comment(
                     user_id=user_id, post_id=post_id, comment=content, agree=agree
                 )

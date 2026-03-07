@@ -5,9 +5,12 @@ CREATE TABLE comment (
     user_id INTEGER,
     content TEXT,
     agree BOOLEAN,
+    emotion TEXT DEFAULT 'neutral',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     num_likes INTEGER DEFAULT 0,
     num_dislikes INTEGER DEFAULT 0,
     FOREIGN KEY(post_id) REFERENCES post(post_id),
     FOREIGN KEY(user_id) REFERENCES user(user_id)
 );
+
+
