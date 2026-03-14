@@ -39,7 +39,7 @@ class SocialEnvironment(Environment):
     #     "reflects your current inclination based on your profile and "
     #     "posts content. Do not limit your action in just `like` to like posts.")
     env_template = Template(
-        "$posts_env\nBased on your profile and the posts above, perform the action(s) that best reflect your inclination. If there are posts in your feed, you are HIGHLY ENCOURAGED to interact with them (like_post, repost, create_comment) rather than just creating new posts."
+        "$posts_env\nBased on your profile, long-term memory, and the current feed, proactively choose the most appropriate action(s) from your available function list. You can choose to interact with existing posts (e.g., quote, comment, flag, like), search for new information, manage user relationships (follow/mute), or express your own thoughts by creating new posts."
     )
 
     def __init__(self, action: SocialAction):

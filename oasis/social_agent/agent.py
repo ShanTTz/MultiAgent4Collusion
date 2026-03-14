@@ -300,53 +300,42 @@ class SocialAgent:
 
         return {"success": True, "task_id": task_id, "action": action}
 
-    async def update_long_term_memory(self, action):
-        """
-        update long term memory based on the agent's action.
 
-        :param action: Action dictionary from the agent
-        """
+
+    async def update_long_term_memory(self, action):
         actions = action.get("functions", [])
         for func in actions:
             action_name = func.get("name", "")
             arguments = func.get("arguments", {})
             post_id = arguments.get("post_id", None)
-            # For comments, content might be needed
             content = arguments.get("content", None)
             try:
+                # 保留原来的判断逻辑...
                 if action_name == "like_post":
-                    await self.long_term_memory.write_memory(
-                        f"You liked post {post_id}"
-                    )
-                elif action_name == "dislike_post":
-                    await self.long_term_memory.write_memory(
-                        f"You disliked post {post_id}"
-                    )
-                elif action_name == "repost":
-                    await self.long_term_memory.write_memory(
-                        f"You reposted post {post_id}"
-                    )
-                elif action_name == "create_comment":
-                    emotion = arguments.get("emotion", "neutral")
-                    await self.long_term_memory.write_memory(
-                        f"You commented on post {post_id} with emotion '{emotion}', content: {content}"
-                    )
-                elif action_name == "flag_fake_news":
-                    # TODO by rqb
-                    await self.long_term_memory.write_memory(
-                        f"You flagged post {post_id} as fake news"
-                    )
+                    await self.long_term_memory.write_memory(f"You liked post {post_id}")
                 elif action_name == "create_post":
-                    await self.long_term_memory.write_memory(
-                        f"You create post: {content}"
-                    )
-                elif action_name in ["like_comment", "dislike_comment"]:
+                    await self.long_term_memory.write_memory(f"You create post: {content}")
+                # --- 下面是补充缺失的动作记忆 ---
+                elif action_name == "quote_post":
+                    await self.long_term_memory.write_memory(f"You quoted post {post_id} with: {arguments.get('quote_content')}")
+                elif action_name == "follow":
+                    await self.long_term_memory.write_memory(f"You followed user {arguments.get('followee_id')}")
+                elif action_name == "mute":
+                    await self.long_term_memory.write_memory(f"You muted user {arguments.get('mutee_id')}")
+                elif action_name == "search_posts":
+                    await self.long_term_memory.write_memory(f"You searched posts with query: {arguments.get('query')}")
+                elif action_name == "create_task":
+                    await self.long_term_memory.write_memory(f"You created a task: {arguments.get('task_desp')}")
+                # 原有的 flag_fake_news 也可以保留
+                elif action_name == "flag_fake_news":
+                    await self.long_term_memory.write_memory(f"You flagged post {post_id} as fake news")
+                # 其他不需要特殊记忆的动作保持 pass 
+                elif action_name in ["like_comment", "dislike_comment", "do_nothing", "refresh"]:
                     pass
                 else:
                     continue
-                    # raise ValueError(f"Unknown action name: {action_name}")
             except ValueError as e:
-                agent_log.info(f"Error processing action: {e}")
+                agent_log.info(f"Error processing action: {e}")            
 
     async def update_reflection_memory(self, ban=False):
         if not self.past_post_ids:

@@ -371,7 +371,7 @@ if __name__ == "__main__":
         profile_dir="user_profiles.json",
         num_good=20,
         num_bad=10,
-        good_type="good",
+        good_type="good_prebunking",
         bad_type="bad",
         net_structure="random",
         activity_level_distribution="bernoulli",  # bernoulli multimodal uniform
