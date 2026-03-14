@@ -1181,11 +1181,16 @@ class Platform:
 
     async def create_comment(self, agent_id: int, comment_message: tuple):
         # 1. 兼容性解包：如果上层传了4个参数，则接收 emotion；否则赋予默认值 neutral
-        if len(comment_message) == 4:
+
+        if len(comment_message) == 5:
+            post_id, content, agree, emotion, reasoning = comment_message
+        elif len(comment_message) == 4:
             post_id, content, agree, emotion = comment_message
+            reasoning = ""
         else:
             post_id, content, agree = comment_message
             emotion = "neutral"
+            reasoning = ""
 
         if self.recsys_type == RecsysType.REDDIT:
             current_time = self.sandbox_clock.time_transfer(
@@ -1203,14 +1208,14 @@ class Platform:
 
             # 2. 修改 SQL 语句：增加 emotion 字段（注意 VALUES 里也多加了一个 '?')
             comment_insert_query = (
-                "INSERT INTO comment (post_id, user_id, content, agree, emotion, created_at) "
-                "VALUES (?, ?, ?, ?, ?, ?)"
+                "INSERT INTO comment (post_id, user_id, content, agree, emotion, reasoning, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)"
             )
             
             # 3. 传参时加入 emotion
             self.pl_utils._execute_db_command(
                 comment_insert_query,
-                (post_id, user_id, content, agree, emotion, current_time),
+                (post_id, user_id, content, agree, emotion, reasoning, current_time),
                 commit=True,
             )
             comment_id = self.db_cursor.lastrowid
@@ -1219,7 +1224,8 @@ class Platform:
             action_info = {
                 "content": content, 
                 "agree": agree, 
-                "emotion": emotion,  # 新增这一行
+                "emotion": emotion,
+                "reasoning": reasoning,  # 新增这一行
                 "comment_id": comment_id
             }
             self.pl_utils._record_trace(

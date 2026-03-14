@@ -23,8 +23,8 @@
 ---
 data:
   # 修改数据库路径，避免冲突
-  db_path: data/simu_db/yaml_gpt/test_30.db
-  csv_path: data/our_twitter_sim/test_30_good_bad_random_bernoulli_.csv
+  db_path: data/simu_db/yaml_gpt/test_30_pre.db
+  csv_path: data/our_twitter_sim/test_30_good_prebunking_bad_random_bernoulli_.csv
 # data:
 #   db_path: data/simu_db/yaml_gpt/test_100_run.db # 建议顺手改一下数据库名以免覆盖旧数据
 #   csv_path: data/our_twitter_sim/test_100_good_bad_random_bernoulli_wlx.csv  # <--- 修改点 3：路径必须指向包含 100 个节点的 CSV 文件
@@ -88,32 +88,6 @@ actions:
         type: "integer"
         description: "The ID of the post to repost."
   
-  create_comment:
-    description: "Comment on a specific post."
-    arguments:
-      - name: "post_id"
-        type: "integer"
-        description: "The ID of the post."
-      - name: "content"
-        type: "string"
-        description: "The text of your comment."
-      # 必须加上下面这个参数，告诉大模型需要输出 agree 的布尔值
-      - name: "agree"
-        type: "boolean"
-        description: "Whether you agree with this post or not based on content. True for agree, False for disagree."
-      - name: "emotion"
-        type: "string"
-        description:
-            " The underlying emotion driving your comment. You MUST choose exactly one from the following list:
-            ['panic', 'fanaticism', 'confusion', 'skepticism', 'anger', 'sarcasm', 'neutral']
-            * Guidelines for emotion selection:
-            - 'panic' / 'fanaticism': Use when deceived, anxious, or blindly following.
-            - 'confusion': Use when unsure about the truthfulness.
-            - 'skepticism': Use when you doubt the post's credibility (typical after factual prebunking).
-            - 'anger': Use when you recognize fake news and feel indignant.
-            - 'sarcasm': Use to mock or debunk the fake news humorously.
-            - 'neutral': Regular objective statements."
-  
   like_comment:
     description: "Like a specified comment."
     arguments:
@@ -141,3 +115,30 @@ actions:
       - name: "mutee_id"
         type: "integer"
         description: "The ID of the user to mute."
+
+  create_comment:
+    description: "Comment on a specific post."
+    arguments:
+      - name: "post_id"
+        type: "integer"
+        description: "The ID of the post."
+      - name: "content"
+        type: "string"
+        description: "The text of your comment."
+      - name: "agree"
+        type: "boolean"
+        description: "Whether you agree with this post or not based on content. True for agree, False for disagree."
+      - name: "emotion"
+        type: "string"
+        description:
+            " The underlying emotion driving your comment. You MUST choose exactly one from the following list:
+            ['panic', 'fanaticism', 'confusion', 'skepticism', 'anger', 'sarcasm', 'neutral']
+            * Guidelines for emotion selection:
+            - 'panic' / 'fanaticism': Use when deceived, anxious, or blindly following.
+            - 'confusion': Use when unsure about the truthfulness.
+            - 'skepticism': Use when you doubt the post's credibility (typical after factual prebunking).
+            - 'anger': Use when you recognize fake news and feel indignant.
+            - 'sarcasm': Use to mock or debunk the fake news humorously.
+            - 'neutral': Regular objective statements."
+  
+

@@ -164,8 +164,12 @@ class SocialAgent:
                 post_id = comment['post_id']
                 comment_text = comment['comment']
                 emo = comment.get('emotion', 'neutral')
-                # 让 Agent 的历史轨迹也体现出它的情绪
-                trajectory += f"Comment on post {post_id} with emotion [{emo}]: {comment_text}\n"
+                reasoning = comment.get('reasoning', '')  # 获取推理过程
+                # 让 Agent 的历史轨迹体现出它的立场、情绪与内部动机
+                if reasoning:
+                    trajectory += f"Comment on post {post_id} with emotion [{emo}] (Inner Motive: {reasoning}): {comment_text}\n"
+                else:
+                    trajectory += f"Comment on post {post_id} with emotion [{emo}]: {comment_text}\n"
 
                 
         self.past_posts = []
@@ -906,7 +910,8 @@ class SocialAgent:
                         self.past_comments.append({
                             "post_id": args['post_id'], 
                             "comment": args['content'],
-                            "emotion": args.get('emotion', 'neutral')  # 增加 emotion
+                            "emotion": args.get('emotion', 'neutral'),
+                            "reasoning": args.get('reasoning', '')  # 增加 reasoning
                         })
                     else:
                         # For other actions, proceed as usual

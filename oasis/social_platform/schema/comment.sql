@@ -6,6 +6,7 @@ CREATE TABLE comment (
     content TEXT,
     agree BOOLEAN,
     emotion TEXT DEFAULT 'neutral',
+    reasoning TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     num_likes INTEGER DEFAULT 0,
     num_dislikes INTEGER DEFAULT 0,

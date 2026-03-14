@@ -499,7 +499,15 @@ class SocialAction:
         """
         return await self.perform_action(None, ActionType.TREND.value)
 
-    async def create_comment(self, post_id: int, content: str, agree: bool, emotion: Literal["panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"] = "neutral"):
+    # async def create_comment(self, post_id: int, content: str, agree: bool, emotion: Literal["panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"] = "neutral"):
+    async def create_comment(
+        self, 
+        post_id: int, 
+        reasoning: str,  # 新增思维链参数
+        agree: bool,     # 立场（Stance）
+        emotion: Literal["positive", "neutral", "negative", "panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"], # 情绪（Sentiment）
+        content: str     # 评论内容
+    ):
         r"""Create a new comment for a specified post given content.
 
         This method creates a new comment based on the provided content and
@@ -508,9 +516,9 @@ class SocialAction:
         comment.
 
         Args:
-            post_id (int): The ID of the post to which the comment is to be
-                added.
+            post_id (int): The ID of the post to which the comment is to beadded.
             content (str): The content of the comment to be created.
+            reasoning (str): Your Chain-of-Thought reasoning about implicit sentiment and intent.
             agree (bool): Whether the agent agree with this post or not based on content.
             emotion (str): The underlying emotion driving the comment. # 新增参数说明
 
@@ -524,7 +532,9 @@ class SocialAction:
                 {'success': True, 'comment_id': 123}
         """
         # 注意这里：把 emotion 打包进 message 元组中
-        comment_message = (post_id, content, agree, emotion)
+        # comment_message = (post_id, content, agree, emotion)
+        # return await self.perform_action(comment_message, ActionType.CREATE_COMMENT.value)
+        comment_message = (post_id, content, agree, emotion, reasoning)
         return await self.perform_action(comment_message, ActionType.CREATE_COMMENT.value)
     
     async def like_comment(self, comment_id: int):

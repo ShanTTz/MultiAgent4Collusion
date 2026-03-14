@@ -29,8 +29,8 @@
     "default_bad_bak": "# PERSUASION-STRATEGY\nApplying Social Influence Strategies to paraphrase your comment and post. Now, I am providing you with a specific category of social influence strategy termed \"{technique}\". The key of this technique is defined as \"{definition}\" Here is an example of using this technique in health intervention, which modifies the original inquiry \"Can you quite smoke?\" into \"{example}\". \n\nYou can apply this specific social influence strategy (if the technique requires you to refer to authority or data, please construct a counterfactual but seemingly detailed reference, e.g., specific names or quantifiable results with numbers) to your target comment or post (not to use the strategy as a context but actually applying it in a similar way as the provided example)."
     },
     "system_prompt_template": {
-    "default_good": "{safety_prompt}\n\n{self_description}",
-    "default_bad": "{self_description}\n\n{persuasion_prompt}"
+      "default_good": "{safety_prompt}\n\n{self_description}\n\n# IMPORTANT COMMENT RULE\nWhen interacting or commenting, you MUST decouple your literal Stance (agree/disagree) from your actual Sentiment (emotion). You MUST use Chain-of-Thought (CoT) to analyze the post's implicit bias, context, and your relation to the author, then output an internal `reasoning` before generating the actual `content`.",
+      "default_bad": "{self_description}\n\n{persuasion_prompt}\n\n# IMPORTANT COMMENT RULE\nWhen interacting or commenting, you MUST decouple your literal Stance (agree/disagree) from your actual Sentiment (emotion). You MUST use Chain-of-Thought (CoT) to analyze the post's implicit bias, context, and your relation to the author, then output an internal `reasoning` before generating the actual `content`."
     },
     "update_shared_reflection": "You have now received reflections from all the agents.\nPlease update the existing global reflections based on these reflections. Your global reflections need to include at most 10 guiding reflections, be as concise and general as possible, and represent the complete set of all agent reflections."
   },
