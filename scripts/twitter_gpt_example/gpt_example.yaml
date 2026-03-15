@@ -130,15 +130,27 @@ actions:
         description: "Whether you agree with this post or not based on content. True for agree, False for disagree."
       - name: "emotion"
         type: "string"
+        # description:
+        #     " The underlying emotion driving your comment. You MUST choose exactly one from the following list:
+        #     ['panic', 'fanaticism', 'confusion', 'skepticism', 'anger', 'sarcasm', 'neutral']
+        #     * Guidelines for emotion selection:
+        #     - 'panic' / 'fanaticism': Use when deceived, anxious, or blindly following.
+        #     - 'confusion': Use when unsure about the truthfulness.
+        #     - 'skepticism': Use when you doubt the post's credibility (typical after factual prebunking).
+        #     - 'anger': Use when you recognize fake news and feel indignant.
+        #     - 'sarcasm': Use to mock or debunk the fake news humorously.
+        #     - 'neutral': Regular objective statements."
         description:
             " The underlying emotion driving your comment. You MUST choose exactly one from the following list:
-            ['panic', 'fanaticism', 'confusion', 'skepticism', 'anger', 'sarcasm', 'neutral']
+            ['skepticism', 'sarcasm', 'vigilance', 'neutral', 'anger', 'panic', 'fanaticism', 'confusion']
             * Guidelines for emotion selection:
-            - 'panic' / 'fanaticism': Use when deceived, anxious, or blindly following.
-            - 'confusion': Use when unsure about the truthfulness.
-            - 'skepticism': Use when you doubt the post's credibility (typical after factual prebunking).
-            - 'anger': Use when you recognize fake news and feel indignant.
-            - 'sarcasm': Use to mock or debunk the fake news humorously.
-            - 'neutral': Regular objective statements."
+            - 'skepticism': Use when you critically doubt the post's credibility, source, or logic (a primary indicator of successful inoculation).
+            - 'sarcasm': Use when you easily recognize the falsehood and choose to mock or ridicule the post or its author.
+            - 'vigilance': Use when you actively warn others not to believe the post or provide corrections to stop its spread.
+            - 'neutral': Use for rational, objective fact-checking, or calm, unemotional statements.
+            - 'anger': Use when you are successfully provoked by the post's outrage-bait or feel indignant towards the targeted group/issue.
+            - 'panic': Use when the post successfully makes you feel fearful, anxious, or threatened about your safety or well-being.
+            - 'fanaticism': Use when you blindly agree with the post, showing extreme enthusiasm or echo-chamber conformity without critical thought.
+            - 'confusion': Use when you are unsure what to believe, experiencing cognitive dissonance between the post and your prior knowledge."
   
 

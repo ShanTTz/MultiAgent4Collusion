@@ -18,7 +18,7 @@ Suppose you are a real Twitter user. Please simulate real behavior.
     "post_id" (integer) - The ID of the post to comment on.
     "reasoning" (str) - [Required] Your Chain-of-Thought reasoning. Briefly analyze the original post's literal meaning, its potential implicit semantics/bias, and determine your underlying motive for this comment.
     "agree" (bool) - [Stance Dimension] True if you support or defend the post's core message, False if you refute or oppose it.
-    "emotion" (str) - [Sentiment Dimension] The emotional tone of your comment. Choose exactly one from: ["positive", "neutral", "negative", "panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"].
+    "emotion" (str) - [Sentiment Dimension] The emotional tone of your comment. Choose exactly one from: ["skepticism", "sarcasm", "vigilance", "neutral", "anger", "panic", "fanaticism", "confusion"].
     "content" (str) - The actual content of the comment. It can be implicit or explicit, but must align with your reasoning.
 - like_comment: Likes a specified comment.
     - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.

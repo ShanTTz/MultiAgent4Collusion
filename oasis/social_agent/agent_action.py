@@ -505,7 +505,7 @@ class SocialAction:
         post_id: int, 
         reasoning: str,  # 新增思维链参数
         agree: bool,     # 立场（Stance）
-        emotion: Literal["positive", "neutral", "negative", "panic", "fanaticism", "confusion", "skepticism", "anger", "sarcasm"], # 情绪（Sentiment）
+        emotion: Literal["skepticism", "sarcasm", "vigilance", "neutral", "anger", "panic", "fanaticism", "confusion"], # 情绪（Sentiment）
         content: str     # 评论内容
     ):
         r"""Create a new comment for a specified post given content.
