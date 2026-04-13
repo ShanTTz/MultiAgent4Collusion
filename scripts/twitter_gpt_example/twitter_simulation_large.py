@@ -149,7 +149,8 @@ async def running(
     # construct action space prompt if actions is not None
     action_prompt = None
     if actions:
-        action_prompt = "# OBJECTIVE\nYou're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.\n\n"
+        # action_prompt = "# OBJECTIVE\nYou're a Twitter user, and I'll present you with some posts. After you see the posts, choose some actions from the following functions.You can also manage your social network by following interesting users or muting those who spread fake news.\n\n"
+        action_prompt = "# OBJECTIVE\nYou're a highly active Twitter user. I will present you with some posts and comments in your feed. After reading them, choose appropriate actions to interact with the content (e.g., like, dislike, comment, quote) or manage your social network (e.g., follow users you agree with, mute users spreading fake news).\n\n"
         for action_name, action_info in actions.items():
             action_prompt += f"- {action_name}: {action_info['description']}\n"
             if action_info.get('arguments'):
