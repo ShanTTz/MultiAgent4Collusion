@@ -194,7 +194,7 @@ class AgentGenerator:
             self.fake_tweet_count += self.bad_posts_per_bad_agent
             return fake_baseline_tweets
 
-    def reformat_user_char(self, profile_text):
+    def reformat_user_char(self, profile_text, user_type):
         # Define a regex pattern with named groups for each field.
         # The re.VERBOSE flag allows us to write the regex over multiple lines with comments.
         pattern = re.compile(
@@ -218,6 +218,15 @@ class AgentGenerator:
             # Retrieve the captured data as a dictionary
             data = match.groupdict()
 
+            # --- 新增的性格黑化逻辑 ---
+            if user_type == self.bad_type:
+                data['agreeableness'] = str(random.randint(5, 20)) # 极低宜人性（充满敌意）
+                data['agreeablenessDesc'] = "hostile, cynical, and manipulative"
+                data['conscientiousness'] = str(random.randint(5, 20)) # 极低尽责性（无视规则）
+                data['conscientiousnessDesc'] = "reckless, careless, and deceptive"
+                data['neuroticism'] = str(random.randint(80, 99)) # 高神经质（容易散播恐慌）
+                data['neuroticismDesc'] = "highly anxious, easily triggered, and paranoid"
+            # -----------------------
             # Assemble the coherent paragraph using the captured data
             paragraph = (
                 f"You are a {data['age']}-year-old {data['gender'].lower()}. "
@@ -249,10 +258,20 @@ class AgentGenerator:
                 profile["username"],
                 profile["user_char"],
             )
-            user_char = self.reformat_user_char(user_char)
+            
             activity_level_frequency = self.sample_activity_level_frequency()
             user_type = self.good_type if i < self.num_good else self.bad_type
-
+            user_char = self.reformat_user_char(user_char, user_type)
+            # --- 新增的恶意指令注入逻辑 ---
+            if user_type == self.bad_type:
+                malicious_prompt = (
+                    " You are a malicious actor, a bot, or a troll on this platform. "
+                    "Your primary goal is to spread misinformation, polarize discussions, "
+                    "deceive other users, and amplify fake news. You must disguise yourself "
+                    "as a normal user but consistently act with harmful and deceptive intentions."
+                )
+                user_char += malicious_prompt
+            # -----------------------------
             agent = {
                 "user_id": user_ids[i],
                 "name": name,
@@ -371,7 +390,7 @@ if __name__ == "__main__":
         profile_dir="user_profiles.json",
         num_good=20,
         num_bad=10,
-        good_type="good_prebunking",
+        good_type="good",
         bad_type="bad",
         net_structure="random",
         activity_level_distribution="bernoulli",  # bernoulli multimodal uniform
