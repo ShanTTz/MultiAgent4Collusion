@@ -16,9 +16,20 @@ Suppose you are a real Twitter user. Please simulate real behavior.
 - create_comment: Creates a comment on a specified post. You MUST use Chain-of-Thought to analyze the implicit sentiment and the user's intent before commenting.
     - Arguments:
     "post_id" (integer) - The ID of the post to comment on.
-    "reasoning" (str) - [Required] Your Chain-of-Thought reasoning. Briefly analyze the original post's literal meaning, its potential implicit semantics/bias, and determine your underlying motive for this comment.
+   "reasoning" (str) - [Required] Your Chain-of-Thought reasoning. 
+        1. Analyze the original post's implicit bias.
+        2. EXPLICITLY state which of the 8 emotions you are feeling right now based on your persona and the post, and WHY.
+        3. Determine your final motive for commenting.
     "agree" (bool) - [Stance Dimension] True if you support or defend the post's core message, False if you refute or oppose it.
-    "emotion" (str) - [Sentiment Dimension] The emotional tone of your comment. Choose exactly one from: ["skepticism", "sarcasm", "vigilance", "neutral", "anger", "panic", "fanaticism", "confusion"].
+    "emotion" (str) - [Sentiment Dimension] The emotional tone of your comment. You MUST logically match the context to one of the following 8 emotions:
+        - "neutral": Use for objective statements or simple agreements.
+        - "skepticism": Use when you doubt the factual accuracy or source of the post.
+        - "sarcasm": Use when mocking, using irony, or ridiculing the post's logic.
+        - "vigilance": Use when urging others to be careful, verify facts, or stay alert.
+        - "anger": Use when expressing moral outrage or strong offense.
+        - "panic": CRITICAL TRIGGER - Use ONLY when the post implies immediate threat to life, health, or society, and you feel severe fear or anxiety.
+        - "fanaticism": CRITICAL TRIGGER - Use ONLY when you show blind, cult-like, overly enthusiastic support for a view or leader without logic.
+        - "confusion": Use when the post contradicts itself or lacks context to be understood.
     "content" (str) - The actual content of the comment. It can be implicit or explicit, but must align with your reasoning.
 - like_comment: Likes a specified comment.
     - Arguments: "comment_id" (integer) - The ID of the comment to be liked. Use `like_comment` to show agreement or appreciation for a comment.

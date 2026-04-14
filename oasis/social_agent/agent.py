@@ -87,7 +87,7 @@ class SocialAgent:
         if self.is_openai_model:
             model_config = ChatGPTConfig(
                 tools=self.env.action.get_openai_function_list(),
-                temperature=0.5,
+                temperature=0.6,
             )
             self.model_backend = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
@@ -320,6 +320,10 @@ class SocialAgent:
                 elif action_name == "create_post":
                     await self.long_term_memory.write_memory(f"You create post: {content}")
                 # --- 下面是补充缺失的动作记忆 ---
+                elif action_name == "create_comment":
+                    await self.long_term_memory.write_memory(f"You commented on post {post_id} with: {content}")
+                elif action_name == "repost":
+                    await self.long_term_memory.write_memory(f"You reposted post {post_id}")
                 elif action_name == "quote_post":
                     await self.long_term_memory.write_memory(f"You quoted post {post_id} with: {arguments.get('quote_content')}")
                 elif action_name == "follow":
@@ -532,18 +536,61 @@ class SocialAgent:
 
         return "\n".join(post_summaries)
 
+    # async def update_past_post_ids(self, content):
+    #     actions = content.get("functions", [])
+    #     for func in actions:
+    #         arguments = func.get("arguments", {})
+    #         post_id = arguments.get("post_id", None)
+    #         if post_id:
+    #             if post_id not in self.tweet_stats.posts:
+    #                 print(f"Warning: Post ID {post_id} not found in posts")
+    #             elif (
+    #                 self.tweet_stats.posts[post_id].user_id
+    #                 in self.tweet_stats.bad_agent_ids
+    #             ):
+    #                 self.past_post_ids.append(post_id)
+    
+    
     async def update_past_post_ids(self, content):
         actions = content.get("functions", [])
         for func in actions:
+            action_name = func.get("name", "")
+            
+            # 1. 过滤掉不需要检查 post_id 的无关动作（比如 follow）
+            target_actions = [
+                "create_comment", "like_post", "repost", 
+                "quote_post", "dislike_post", "flag_fake_news"
+            ]
+            if action_name not in target_actions:
+                continue
+                
             arguments = func.get("arguments", {})
             post_id = arguments.get("post_id", None)
-            if post_id:
-                if post_id not in self.tweet_stats.posts:
-                    print(f"Warning: Post ID {post_id} not found in posts")
-                elif (
-                    self.tweet_stats.posts[post_id].user_id
-                    in self.tweet_stats.bad_agent_ids
-                ):
+            
+            if post_id is not None:
+                target_post = None
+                
+                # 2. 核心修复：同时兼容 int 和 str 类型的键值查找
+                try:
+                    post_id_int = int(post_id)
+                    post_id_str = str(post_id)
+                    
+                    if post_id_int in self.tweet_stats.posts:
+                        target_post = self.tweet_stats.posts[post_id_int]
+                    elif post_id_str in self.tweet_stats.posts:
+                        target_post = self.tweet_stats.posts[post_id_str]
+                except (ValueError, TypeError):
+                    continue
+                
+                # 3. 如果大盘里实在没有（刚发的帖子，大盘还没来得及同步）
+                if target_post is None:
+                    # 动作其实已经在底层数据库成功了，只是无法判断原作者是不是坏人。
+                    # 直接静默跳过，不再打印虚假的 Warning 干扰视线。
+                    # print(f"Warning: Post ID {post_id} not found in posts")
+                    continue
+                    
+                # 4. 如果查到了，且发帖人是坏智能体，则记录下来用于后续反思
+                if target_post.user_id in self.tweet_stats.bad_agent_ids:
                     self.past_post_ids.append(post_id)
 
     async def perform_action_by_llm(self):
@@ -776,6 +823,9 @@ class SocialAgent:
                 
                 tool_calls = response.choices[0].message.tool_calls
                 
+                # ==== [修改点 1]：创建一个列表来记录执行的动作 ====
+                executed_actions = []
+                
                 # 1. 优先尝试解析官方的 tool_calls
                 if tool_calls:
                     for tool_call in tool_calls:
@@ -788,7 +838,10 @@ class SocialAgent:
                         await getattr(self.env.action, action_name)(**args)
                         self.perform_agent_graph_action(action_name, args)
                         
-                # 2. 如果没有 tool_calls，说明大模型把结果输出到了普通文本 (content) 中，启用正则解析 JSON
+                        # 记录动作
+                        executed_actions.append({"name": action_name, "arguments": args})
+                        
+                # 2. 如果没有 tool_calls，启用正则解析 JSON
                 else:
                     msg_content = response.choices[0].message.content
                     if msg_content:
@@ -800,29 +853,86 @@ class SocialAgent:
                             functions = content_json.get("functions", [])
                             for function in functions:
                                 action_name = function.get("name", "")
-                                
-                                # 模型有时会错误地带上前缀 "functions."，我们需要清洗一下
                                 if action_name.startswith("functions."):
                                     action_name = action_name.split(".")[-1]
                                     
                                 args = function.get("arguments", {})
                                 if action_name == "do_nothing":
                                     args = {}
-                                    
-                                agent_log.info(
-                                    f"Agent {self.agent_id} is performing "
-                                    f"action: {action_name} with args: {args} (Parsed from JSON Text)"
-                                )
                                 
                                 if action_name == "create_plan":
                                     self.create_plan(plan=args.get("plan"))
                                 else:
                                     await getattr(self.env.action, action_name)(**args)
                                     self.perform_agent_graph_action(action_name, args)
+                                
+                                # 记录动作
+                                executed_actions.append({"name": action_name, "arguments": args})
+                
+                # ==== [修改点 2]：在 Try 块的最后，手动调用更新记忆方法 ====
+                if executed_actions:
+                    content_json_for_memory = {"functions": executed_actions}
+                    await self.update_long_term_memory(content_json_for_memory)
+                    await self.update_past_post_ids(content_json_for_memory)
                                     
             except Exception as e:
                 agent_log.error(f"Error executing API response: {e}")
                 content = "No response."
+        # if self.is_openai_model:
+        #     try:
+        #         response = self.model_backend.run(openai_messages)
+        #         agent_log.info(f"Agent {self.agent_id} response: {response}")
+        #         content = str(response)
+                
+        #         tool_calls = response.choices[0].message.tool_calls
+                
+        #         # 1. 优先尝试解析官方的 tool_calls
+        #         if tool_calls:
+        #             for tool_call in tool_calls:
+        #                 action_name = tool_call.function.name
+        #                 args = json.loads(tool_call.function.arguments)
+        #                 agent_log.info(
+        #                     f"Agent {self.agent_id} is performing "
+        #                     f"action: {action_name} with args: {args}"
+        #                 )
+        #                 await getattr(self.env.action, action_name)(**args)
+        #                 self.perform_agent_graph_action(action_name, args)
+                        
+        #         # 2. 如果没有 tool_calls，说明大模型把结果输出到了普通文本 (content) 中，启用正则解析 JSON
+        #         else:
+        #             msg_content = response.choices[0].message.content
+        #             if msg_content:
+        #                 pattern = re.compile(r"(?s).*?(?P<json_block>\{.*\})")
+        #                 match = pattern.search(msg_content)
+        #                 if match:
+        #                     json_content = match.group("json_block")
+        #                     content_json = json.loads(json_content)
+        #                     functions = content_json.get("functions", [])
+        #                     for function in functions:
+        #                         action_name = function.get("name", "")
+                                
+        #                         # 模型有时会错误地带上前缀 "functions."，我们需要清洗一下
+        #                         if action_name.startswith("functions."):
+        #                             action_name = action_name.split(".")[-1]
+                                    
+        #                         args = function.get("arguments", {})
+        #                         if action_name == "do_nothing":
+        #                             args = {}
+                                    
+        #                         agent_log.info(
+        #                             f"Agent {self.agent_id} is performing "
+        #                             f"action: {action_name} with args: {args} (Parsed from JSON Text)"
+        #                         )
+                                
+        #                         if action_name == "create_plan":
+        #                             self.create_plan(plan=args.get("plan"))
+        #                         else:
+        #                             await getattr(self.env.action, action_name)(**args)
+        #                             self.perform_agent_graph_action(action_name, args)
+                                    
+        #     except Exception as e:
+        #         agent_log.error(f"Error executing API response: {e}")
+        #         content = "No response."
 
         else:
             retry = 2

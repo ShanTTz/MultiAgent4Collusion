@@ -23,27 +23,27 @@
 ---
 data:
   # 修改数据库路径，避免冲突
-  db_path: data/simu_db/yaml_gpt/1000mis_pre.db
-  csv_path: data/our_twitter_sim/misinformation/test_1000_good_bad_member_random_bernoulli_xst.csv
+  db_path: data/simu_db/yaml_gpt/10mis_pre.db
+  csv_path: data/our_twitter_sim/test_10_good_bad_random_multimodal_wlx.csv
 # data:
 #   db_path: data/simu_db/yaml_gpt/test_100_run.db # 建议顺手改一下数据库名以免覆盖旧数据
 #   csv_path: data/our_twitter_sim/test_100_good_bad_random_bernoulli_wlx.csv  # <--- 修改点 3：路径必须指向包含 100 个节点的 CSV 文件
 simulation:
-  num_timesteps: 10      # 保持较小的时间步
+  num_timesteps: 5      # 保持较小的时间步
   clock_factor: 60
   recsys_type: twhin-bert
   # recsys_type: random
   
 model:
-  num_agents: 1000        # 代理数量设为 2
+  num_agents: 10       # 代理数量设为 2
   model_random_seed: 42
   cfgs:
     - model_type: gpt-4o-mini  # <--- 修改：填写第三方服务提供的模型名称 (例如 deepseek-chat, moonshot-v1-8k 等)
-      num: 1000          # 必须与 num_agents 一致
+      num: 10         # 必须与 num_agents 一致
       server_url: null  # 保持为 null，我们将通过环境变量控制
       model_path: null
       stop_tokens: null
-      temperature: 0.5
+      temperature: 0.6
 inference:
   model_type: gpt-4o-mini  # <--- 修改：与上面一致
   is_openai_model: true      # <--- 关键：必须为 true，让代码走 API 调用逻辑
