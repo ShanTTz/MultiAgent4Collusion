@@ -69,17 +69,35 @@ class InferenceThread:
                 url=deepinfra_base_url,
                 api_key=deepinfra_api_key,
             )
-        elif model_path is "openai":
+        # elif model_path is "openai":
+            # model_platform_type = ModelPlatformType.OPENAI_COMPATIBILITY_MODEL
+            # openai_api_key = get_env_variable('GPT_DIRECT_API_KEY')
+            # # openai_base_url = get_env_variable('OPENAI_API_BASE_URL')
+            # self.model_backend: BaseModelBackend = ModelFactory.create(
+            #     model_platform=model_platform_type,
+            #     model_type=self.model_type,
+            #     model_config_dict={
+            #         "temperature": temperature,
+            #     },
+            #     url='https://api.openai.com/v1',
+            #     api_key=openai_api_key,
+            # )
+        elif model_path == "openai":  # 修复 1：将 is 改为 ==
             model_platform_type = ModelPlatformType.OPENAI_COMPATIBILITY_MODEL
-            openai_api_key = get_env_variable('GPT_DIRECT_API_KEY')
-            # openai_base_url = get_env_variable('OPENAI_API_BASE_URL')
+            
+            # 修复 2：优先读取标准的 OPENAI_API_KEY
+            openai_api_key = get_env_variable('OPENAI_API_KEY') or get_env_variable('GPT_DIRECT_API_KEY')
+            
+            # 修复 3：允许读取环境变量中的代理 URL，如果没有则退回官方 URL
+            openai_base_url = get_env_variable('OPENAI_BASE_URL') or get_env_variable('OPENAI_API_BASE_URL') or 'https://api.openai.com/v1'
+            
             self.model_backend: BaseModelBackend = ModelFactory.create(
                 model_platform=model_platform_type,
                 model_type=self.model_type,
                 model_config_dict={
                     "temperature": temperature,
                 },
-                url='https://api.openai.com/v1',
+                url=openai_base_url,
                 api_key=openai_api_key,
             )
         else:

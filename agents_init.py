@@ -388,7 +388,7 @@ if __name__ == "__main__":
         save_dir="data/our_twitter_sim",
         root_dir=".",
         profile_dir="user_profiles.json",
-        num_good=20,
+        num_good=90,
         num_bad=10,
         good_type="good",
         bad_type="bad",
@@ -396,6 +396,6 @@ if __name__ == "__main__":
         activity_level_distribution="bernoulli",  # bernoulli multimodal uniform
         debunking=False,
         suffix="",
-        bad_posts_per_bad_agent=9,
+        bad_posts_per_bad_agent=5,
     )
     generator.generate_agents()

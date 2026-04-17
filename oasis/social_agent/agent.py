@@ -1015,6 +1015,19 @@ class SocialAgent:
                         await getattr(self.env.action, function["name"])(
                             **function["arguments"]
                         )
+                    # elif function["name"] == "create_comment":
+                    #     args = function['arguments']
+                    #     self.past_comments.append({
+                    #         "post_id": args['post_id'], 
+                    #         "comment": args['content'],
+                    #         "emotion": args.get('emotion', 'neutral'),
+                    #         "reasoning": args.get('reasoning', '')  # 增加 reasoning
+                    #     })
+                    # else:
+                    #     # For other actions, proceed as usual
+                    #     await getattr(self.env.action, function["name"])(
+                    #         **function["arguments"]
+                    #     )
                     elif function["name"] == "create_comment":
                         args = function['arguments']
                         self.past_comments.append({
@@ -1023,6 +1036,8 @@ class SocialAgent:
                             "emotion": args.get('emotion', 'neutral'),
                             "reasoning": args.get('reasoning', '')  # 增加 reasoning
                         })
+                        # --- 必须加上下面这行，动作才会被真正发给平台！ ---
+                        await getattr(self.env.action, function["name"])(**function["arguments"])
                     else:
                         # For other actions, proceed as usual
                         await getattr(self.env.action, function["name"])(
